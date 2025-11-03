@@ -1,512 +1,710 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Trash2, Calculator, User, Target, Sparkles, Lightbulb, ArrowRight, Home } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Plus, Trash2, Calculator, User, Activity, Target } from 'lucide-react';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+const NutritionAnalyzer = () => {
+  const [currentPage, setCurrentPage] = useState('profile');
   const [profile, setProfile] = useState({
-    gender: '', age: '', height: '', weight: '', activityLevel: 'moderate', goal: 'maintain'
+    gender: '',
+    age: '',
+    height: '',
+    weight: '',
+    activityLevel: 'moderate'
   });
   const [dailyNeeds, setDailyNeeds] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
   const [quantity, setQuantity] = useState(1);
-  const [showAISuggestions, setShowAISuggestions] = useState(false);
 
-  // Load from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('nutriProfile');
-    if (saved) {
-      const data = JSON.parse(saved);
-      setProfile(data.profile || profile);
-      setDailyNeeds(data.dailyNeeds);
-      setSelectedItems(data.selectedItems || []);
-      if (data.dailyNeeds) setCurrentPage('tracker');
-    }
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('nutriProfile', JSON.stringify({ profile, dailyNeeds, selectedItems }));
-  }, [profile, dailyNeeds, selectedItems]);
-
+  // Comprehensive nutrition database
   const nutritionDB = {
-    'dosa': { calories: 168, protein: 3.9, carbs: 28.6, fat: 3.7, fiber: 1.2, unit: 'piece (50g)' },
-    'idli': { calories: 58, protein: 2.1, carbs: 11.8, fat: 0.4, fiber: 0.8, unit: 'piece (30g)' },
-    'vada': { calories: 193, protein: 4.8, carbs: 18.5, fat: 11.2, fiber: 2.1, unit: 'piece (60g)' },
-    'rice': { calories: 195, protein: 4.0, carbs: 42.3, fat: 0.5, fiber: 0.6, unit: 'bowl (150g)' },
-    'chapati': { calories: 120, protein: 3.6, carbs: 21.4, fat: 2.5, fiber: 2.8, unit: 'piece (40g)' },
-    'dal': { calories: 172, protein: 13.2, carbs: 27.3, fat: 2.3, fiber: 11.7, unit: 'bowl (150ml)' },
-    'paneer': { calories: 265, protein: 18.3, carbs: 1.2, fat: 20.8, fiber: 0, unit: '100g' },
-    'egg': { calories: 78, protein: 6.3, carbs: 0.6, fat: 5.3, fiber: 0, unit: 'large (50g)' },
-    'chicken breast': { calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, unit: '100g' },
-    'apple': { calories: 95, protein: 0.5, carbs: 25, fat: 0.3, fiber: 4.4, unit: 'medium (182g)' },
-    'banana': { calories: 105, protein: 1.3, carbs: 27, fat: 0.4, fiber: 3.1, unit: 'medium (118g)' },
-    'milk': { calories: 149, protein: 7.7, carbs: 11.7, fat: 7.9, fiber: 0, unit: 'glass (244ml)' },
-    'biryani': { calories: 435, protein: 12.8, carbs: 63.5, fat: 14.3, fiber: 2.7, unit: 'plate (150g)' },
-    'sambar': { calories: 120, protein: 3.8, carbs: 18.5, fat: 4.2, fiber: 4.8, unit: 'bowl (150ml)' },
-    'curd': { calories: 98, protein: 11, carbs: 4.7, fat: 4.3, fiber: 0, unit: 'bowl (150g)' },
-    'oats': { calories: 389, protein: 16.9, carbs: 66.3, fat: 6.9, fiber: 10.6, unit: '100g' },
+    'dosa': { 
+      calories: 168, protein: 3.9, carbs: 28.6, fat: 3.7, fiber: 1.2,
+      calcium: 48, iron: 1.5, magnesium: 15, potassium: 85, sodium: 180,
+      vitaminA: 25, vitaminC: 2, vitaminB6: 0.1, vitaminB12: 0,
+      unit: 'piece (50g)'
+    },
+    'idli': { 
+      calories: 58, protein: 2.1, carbs: 11.8, fat: 0.4, fiber: 0.8,
+      calcium: 35, iron: 0.8, magnesium: 12, potassium: 45, sodium: 90,
+      vitaminA: 15, vitaminC: 1, vitaminB6: 0.05, vitaminB12: 0,
+      unit: 'piece (30g)'
+    },
+    'vada': { 
+      calories: 193, protein: 4.8, carbs: 18.5, fat: 11.2, fiber: 2.1,
+      calcium: 42, iron: 1.8, magnesium: 28, potassium: 125, sodium: 240,
+      vitaminA: 18, vitaminC: 3, vitaminB6: 0.12, vitaminB12: 0,
+      unit: 'piece (60g)'
+    },
+    'sambar': { 
+      calories: 120, protein: 3.8, carbs: 18.5, fat: 4.2, fiber: 4.8,
+      calcium: 65, iron: 2.2, magnesium: 42, potassium: 285, sodium: 420,
+      vitaminA: 185, vitaminC: 12, vitaminB6: 0.18, vitaminB12: 0,
+      unit: 'bowl (150ml)'
+    },
+    'rice': { 
+      calories: 195, protein: 4.0, carbs: 42.3, fat: 0.5, fiber: 0.6,
+      calcium: 15, iron: 0.8, magnesium: 25, potassium: 55, sodium: 2,
+      vitaminA: 0, vitaminC: 0, vitaminB6: 0.15, vitaminB12: 0,
+      unit: 'bowl (150g)'
+    },
+    'chapati': { 
+      calories: 120, protein: 3.6, carbs: 21.4, fat: 2.5, fiber: 2.8,
+      calcium: 28, iron: 1.2, magnesium: 35, potassium: 98, sodium: 145,
+      vitaminA: 5, vitaminC: 0, vitaminB6: 0.08, vitaminB12: 0,
+      unit: 'piece (40g)'
+    },
+    'paratha': { 
+      calories: 258, protein: 5.2, carbs: 32.5, fat: 11.8, fiber: 2.2,
+      calcium: 42, iron: 1.8, magnesium: 38, potassium: 112, sodium: 285,
+      vitaminA: 125, vitaminC: 0.5, vitaminB6: 0.1, vitaminB12: 0,
+      unit: 'piece (80g)'
+    },
+    'biryani': { 
+      calories: 435, protein: 12.8, carbs: 63.5, fat: 14.3, fiber: 2.7,
+      calcium: 75, iron: 2.8, magnesium: 58, potassium: 285, sodium: 680,
+      vitaminA: 185, vitaminC: 8, vitaminB6: 0.28, vitaminB12: 0.3,
+      unit: 'plate (150g)'
+    },
+    'dal': { 
+      calories: 172, protein: 13.2, carbs: 27.3, fat: 2.3, fiber: 11.7,
+      calcium: 82, iron: 3.8, magnesium: 68, potassium: 485, sodium: 320,
+      vitaminA: 65, vitaminC: 5, vitaminB6: 0.22, vitaminB12: 0,
+      unit: 'bowl (150ml)'
+    },
+    'paneer': { 
+      calories: 265, protein: 18.3, carbs: 1.2, fat: 20.8, fiber: 0,
+      calcium: 480, iron: 0.4, magnesium: 28, potassium: 138, sodium: 385,
+      vitaminA: 585, vitaminC: 0, vitaminB6: 0.08, vitaminB12: 1.2,
+      unit: '100g'
+    },
+    'butter chicken': { 
+      calories: 352, protein: 18.8, carbs: 12.9, fat: 25.2, fiber: 1.8,
+      calcium: 125, iron: 2.2, magnesium: 45, potassium: 385, sodium: 720,
+      vitaminA: 485, vitaminC: 12, vitaminB6: 0.35, vitaminB12: 0.8,
+      unit: 'bowl (150g)'
+    },
+    'chole': { 
+      calories: 246, protein: 13.4, carbs: 41.1, fat: 3.9, fiber: 11.4,
+      calcium: 98, iron: 4.2, magnesium: 85, potassium: 625, sodium: 580,
+      vitaminA: 145, vitaminC: 15, vitaminB6: 0.28, vitaminB12: 0,
+      unit: 'bowl (150g)'
+    },
+    'poha': { 
+      calories: 237, protein: 4.2, carbs: 48.8, fat: 2.7, fiber: 2.3,
+      calcium: 35, iron: 2.8, magnesium: 38, potassium: 125, sodium: 285,
+      vitaminA: 85, vitaminC: 8, vitaminB6: 0.15, vitaminB12: 0,
+      unit: 'bowl (150g)'
+    },
+    'apple': { 
+      calories: 95, protein: 0.5, carbs: 25, fat: 0.3, fiber: 4.4,
+      calcium: 11, iron: 0.2, magnesium: 9, potassium: 195, sodium: 2,
+      vitaminA: 98, vitaminC: 8.4, vitaminB6: 0.07, vitaminB12: 0,
+      unit: 'medium (182g)'
+    },
+    'banana': { 
+      calories: 105, protein: 1.3, carbs: 27, fat: 0.4, fiber: 3.1,
+      calcium: 6, iron: 0.3, magnesium: 32, potassium: 422, sodium: 1,
+      vitaminA: 76, vitaminC: 10.3, vitaminB6: 0.43, vitaminB12: 0,
+      unit: 'medium (118g)'
+    },
+    'orange': { 
+      calories: 62, protein: 1.2, carbs: 15.4, fat: 0.2, fiber: 3.1,
+      calcium: 52, iron: 0.1, magnesium: 13, potassium: 237, sodium: 0,
+      vitaminA: 295, vitaminC: 69.7, vitaminB6: 0.08, vitaminB12: 0,
+      unit: 'medium (131g)'
+    },
+    'mango': { 
+      calories: 135, protein: 1.8, carbs: 35, fat: 0.9, fiber: 3.7,
+      calcium: 25, iron: 0.4, magnesium: 23, potassium: 325, sodium: 3,
+      vitaminA: 3285, vitaminC: 76, vitaminB6: 0.23, vitaminB12: 0,
+      unit: 'medium (225g)'
+    },
+    'egg': { 
+      calories: 78, protein: 6.3, carbs: 0.6, fat: 5.3, fiber: 0,
+      calcium: 28, iron: 0.9, magnesium: 6, potassium: 69, sodium: 62,
+      vitaminA: 270, vitaminC: 0, vitaminB6: 0.09, vitaminB12: 0.6,
+      unit: 'large (50g)'
+    },
+    'chicken breast': { 
+      calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0,
+      calcium: 15, iron: 1.0, magnesium: 29, potassium: 256, sodium: 74,
+      vitaminA: 21, vitaminC: 0, vitaminB6: 0.53, vitaminB12: 0.3,
+      unit: '100g'
+    },
+    'milk': { 
+      calories: 149, protein: 7.7, carbs: 11.7, fat: 7.9, fiber: 0,
+      calcium: 276, iron: 0.1, magnesium: 24, potassium: 322, sodium: 105,
+      vitaminA: 395, vitaminC: 0, vitaminB6: 0.09, vitaminB12: 1.1,
+      unit: 'glass (244ml)'
+    },
+    'burger': { 
+      calories: 295, protein: 15.8, carbs: 28.5, fat: 12.8, fiber: 2.1,
+      calcium: 85, iron: 2.8, magnesium: 35, potassium: 285, sodium: 680,
+      vitaminA: 185, vitaminC: 3.5, vitaminB6: 0.18, vitaminB12: 1.2,
+      unit: 'piece'
+    },
+    'pizza': { 
+      calories: 285, protein: 12.2, carbs: 35.6, fat: 10.5, fiber: 2.5,
+      calcium: 185, iron: 2.2, magnesium: 28, potassium: 225, sodium: 598,
+      vitaminA: 285, vitaminC: 4.5, vitaminB6: 0.12, vitaminB12: 0.8,
+      unit: 'slice (107g)'
+    },
+    'samosa': { 
+      calories: 262, protein: 4.8, carbs: 28.5, fat: 14.2, fiber: 2.5,
+      calcium: 38, iron: 1.8, magnesium: 28, potassium: 185, sodium: 485,
+      vitaminA: 125, vitaminC: 4.2, vitaminB6: 0.12, vitaminB12: 0,
+      unit: 'piece'
+    },
   };
 
-  const foodItems = Object.keys(nutritionDB).sort();
-
+  // Calculate daily nutritional needs
   const calculateDailyNeeds = () => {
-    const { age, weight, height, gender, activityLevel, goal } = profile;
-    if (!age || !weight || !height || !gender) {
-      alert('Please fill all fields!');
-      return;
+    const age = parseInt(profile.age);
+    const weight = parseFloat(profile.weight);
+    const height = parseFloat(profile.height);
+    const gender = profile.gender;
+    const activity = profile.activityLevel;
+
+    // BMR calculation using Mifflin-St Jeor Equation
+    let bmr;
+    if (gender === 'male') {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    } else {
+      bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
     }
 
-    let bmr = gender === 'male' 
-      ? (10 * weight) + (6.25 * height) - (5 * age) + 5
-      : (10 * weight) + (6.25 * height) - (5 * age) - 161;
+    // Activity multipliers
+    const activityMultipliers = {
+      sedentary: 1.2,
+      light: 1.375,
+      moderate: 1.55,
+      active: 1.725,
+      veryActive: 1.9
+    };
 
-    const multipliers = { sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, veryActive: 1.9 };
-    let tdee = bmr * multipliers[activityLevel];
-    
-    if (goal === 'lose') tdee -= 500;
-    if (goal === 'gain') tdee += 300;
+    const tdee = bmr * activityMultipliers[activity];
 
-    const proteinGrams = weight * (goal === 'lose' ? 2.0 : goal === 'gain' ? 1.8 : 1.6);
-    const fatGrams = (tdee * 0.25) / 9;
-    const carbGrams = (tdee - (proteinGrams * 4) - (fatGrams * 9)) / 4;
+    // Calculate macros
+    const proteinGrams = weight * 1.6; // 1.6g per kg bodyweight
+    const fatGrams = (tdee * 0.25) / 9; // 25% of calories from fat
+    const proteinCalories = proteinGrams * 4;
+    const fatCalories = fatGrams * 9;
+    const carbCalories = tdee - proteinCalories - fatCalories;
+    const carbGrams = carbCalories / 4;
 
-    setDailyNeeds({
+    // Recommended daily values for vitamins and minerals
+    const needs = {
       calories: Math.round(tdee),
       protein: Math.round(proteinGrams),
       carbs: Math.round(carbGrams),
       fat: Math.round(fatGrams),
       fiber: gender === 'male' ? 38 : 25,
-    });
+      calcium: 1000,
+      iron: gender === 'male' ? 8 : 18,
+      magnesium: gender === 'male' ? 400 : 310,
+      potassium: 3500,
+      sodium: 2300,
+      vitaminA: 900,
+      vitaminC: 90,
+      vitaminB6: 1.3,
+      vitaminB12: 2.4
+    };
+
+    setDailyNeeds(needs);
     setCurrentPage('tracker');
   };
 
+  const foodItems = Object.keys(nutritionDB).sort();
+
+  const filteredItems = foodItems.filter(item =>
+    item.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const addItem = (item) => {
     const nutrition = nutritionDB[item];
-    const multiplied = {};
+    const multipliedNutrition = {};
+    
     Object.keys(nutrition).forEach(key => {
-      multiplied[key] = key !== 'unit' ? nutrition[key] * quantity : nutrition[key];
+      if (key !== 'unit') {
+        multipliedNutrition[key] = nutrition[key] * quantity;
+      } else {
+        multipliedNutrition[key] = nutrition[key];
+      }
     });
-    setSelectedItems([...selectedItems, { name: item, quantity, ...multiplied }]);
+    
+    setSelectedItems([...selectedItems, { 
+      name: item, 
+      quantity: quantity,
+      ...multipliedNutrition
+    }]);
     setSearchTerm('');
     setQuantity(1);
   };
 
-  const consumed = useMemo(() => {
+  const removeItem = (index) => {
+    setSelectedItems(selectedItems.filter((_, i) => i !== index));
+  };
+
+  const calculateTotals = () => {
     return selectedItems.reduce((acc, item) => ({
       calories: acc.calories + item.calories,
       protein: acc.protein + item.protein,
       carbs: acc.carbs + item.carbs,
       fat: acc.fat + item.fat,
       fiber: acc.fiber + item.fiber,
-    }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
-  }, [selectedItems]);
+      calcium: acc.calcium + item.calcium,
+      iron: acc.iron + item.iron,
+      magnesium: acc.magnesium + item.magnesium,
+      potassium: acc.potassium + item.potassium,
+      sodium: acc.sodium + item.sodium,
+      vitaminA: acc.vitaminA + item.vitaminA,
+      vitaminC: acc.vitaminC + item.vitaminC,
+      vitaminB6: acc.vitaminB6 + item.vitaminB6,
+      vitaminB12: acc.vitaminB12 + item.vitaminB12,
+    }), { 
+      calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0,
+      calcium: 0, iron: 0, magnesium: 0, potassium: 0, sodium: 0,
+      vitaminA: 0, vitaminC: 0, vitaminB6: 0, vitaminB12: 0
+    });
+  };
 
+  const consumed = calculateTotals();
+  
   const remaining = dailyNeeds ? {
     calories: dailyNeeds.calories - consumed.calories,
     protein: dailyNeeds.protein - consumed.protein,
     carbs: dailyNeeds.carbs - consumed.carbs,
     fat: dailyNeeds.fat - consumed.fat,
     fiber: dailyNeeds.fiber - consumed.fiber,
+    calcium: dailyNeeds.calcium - consumed.calcium,
+    iron: dailyNeeds.iron - consumed.iron,
+    magnesium: dailyNeeds.magnesium - consumed.magnesium,
+    potassium: dailyNeeds.potassium - consumed.potassium,
+    sodium: dailyNeeds.sodium - consumed.sodium,
+    vitaminA: dailyNeeds.vitaminA - consumed.vitaminA,
+    vitaminC: dailyNeeds.vitaminC - consumed.vitaminC,
+    vitaminB6: dailyNeeds.vitaminB6 - consumed.vitaminB6,
+    vitaminB12: dailyNeeds.vitaminB12 - consumed.vitaminB12,
   } : null;
 
-  const getAISuggestions = useMemo(() => {
-    if (!remaining) return [];
-    const suggestions = [];
-    Object.entries(nutritionDB).forEach(([food, data]) => {
-      let score = 0;
-      if (remaining.protein > 20 && data.protein > 10) score += 50;
-      if (remaining.fiber > 10 && data.fiber > 3) score += 40;
-      if (remaining.calories > 300 && data.calories < 300) score += 20;
-      if (score > 0) suggestions.push({ food, score, data });
-    });
-    return suggestions.sort((a, b) => b.score - a.score).slice(0, 6);
-  }, [remaining]);
+  const getPercentage = (consumed, needed) => {
+    return Math.min(100, Math.round((consumed / needed) * 100));
+  };
 
-  // PAGE 1: HOME - Profile Setup
-  if (currentPage === 'home') {
+  // Profile Page
+  if (currentPage === 'profile') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-lg w-full">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full mb-4">
-              <Sparkles className="text-white" size={40} />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
-              NutriGuard AI
-            </h1>
-            <p className="text-gray-600 text-lg">Your Personal Nutrition Assistant</p>
-            <p className="text-sm text-gray-500 mt-2">Let's calculate your daily nutrition needs!</p>
+            <User className="mx-auto mb-4 text-blue-600" size={64} />
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Nutrition Analyzer</h1>
+            <p className="text-gray-600">Enter your details to get started</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
               <select
                 value={profile.gender}
                 onChange={(e) => setProfile({...profile, gender: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select Gender</option>
-                <option value="male">Male 👨</option>
-                <option value="female">Female 👩</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Age (years)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Age (years)</label>
               <input
                 type="number"
-                placeholder="Enter your age"
                 value={profile.age}
                 onChange={(e) => setProfile({...profile, age: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Enter your age"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Height (cm)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Height (cm)</label>
               <input
                 type="number"
-                placeholder="Enter your height"
                 value={profile.height}
                 onChange={(e) => setProfile({...profile, height: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Enter your height"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Weight (kg)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
               <input
                 type="number"
-                placeholder="Enter your weight"
                 value={profile.weight}
                 onChange={(e) => setProfile({...profile, weight: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                placeholder="Enter your weight"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Goal</label>
-              <select
-                value={profile.goal}
-                onChange={(e) => setProfile({...profile, goal: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              >
-                <option value="lose">🔥 Lose Weight (-500 cal)</option>
-                <option value="maintain">⚖️ Maintain Weight</option>
-                <option value="gain">💪 Gain Muscle (+300 cal)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Activity Level</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Activity Level</label>
               <select
                 value={profile.activityLevel}
                 onChange={(e) => setProfile({...profile, activityLevel: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="sedentary">🪑 Sedentary (little/no exercise)</option>
-                <option value="light">🚶 Light (1-3 days/week)</option>
-                <option value="moderate">🏃 Moderate (3-5 days/week)</option>
-                <option value="active">🏋️ Active (6-7 days/week)</option>
-                <option value="veryActive">⚡ Very Active (twice per day)</option>
+                <option value="sedentary">Sedentary (little/no exercise)</option>
+                <option value="light">Light (1-3 days/week)</option>
+                <option value="moderate">Moderate (3-5 days/week)</option>
+                <option value="active">Active (6-7 days/week)</option>
+                <option value="veryActive">Very Active (twice per day)</option>
               </select>
             </div>
 
             <button
               onClick={calculateDailyNeeds}
               disabled={!profile.gender || !profile.age || !profile.height || !profile.weight}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Calculate My Nutrition
-              <ArrowRight size={24} />
+              Calculate My Nutrition Needs
             </button>
           </div>
-
-          <p className="text-center text-xs text-gray-500 mt-6">
-            Made with ❤️ by Dharshan for Hackathon
-          </p>
         </div>
       </div>
     );
   }
 
-  // PAGE 2 & 3: TRACKER (combined view)
+  // Tracker Page
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="text-purple-600" size={32} />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">NutriGuard AI</h1>
-              <p className="text-sm text-gray-500">Nutrition Tracker</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">🥗 Daily Nutrition Tracker</h1>
+          <p className="text-gray-600">Track what you eat and see what's remaining</p>
+        </div>
+
+        {/* Daily Goals Overview */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 text-white mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold flex items-center">
+              <Target className="mr-2" size={28} />
+              Your Daily Goals
+            </h2>
+            <Activity className="text-white opacity-75" size={32} />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white bg-opacity-20 rounded-lg p-3 text-center">
+              <p className="text-sm opacity-90">Calories</p>
+              <p className="text-2xl font-bold">{dailyNeeds.calories}</p>
+              <p className="text-xs opacity-75">kcal</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-3 text-center">
+              <p className="text-sm opacity-90">Protein</p>
+              <p className="text-2xl font-bold">{dailyNeeds.protein}</p>
+              <p className="text-xs opacity-75">grams</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-3 text-center">
+              <p className="text-sm opacity-90">Carbs</p>
+              <p className="text-2xl font-bold">{dailyNeeds.carbs}</p>
+              <p className="text-xs opacity-75">grams</p>
+            </div>
+            <div className="bg-white bg-opacity-20 rounded-lg p-3 text-center">
+              <p className="text-sm opacity-90">Fat</p>
+              <p className="text-2xl font-bold">{dailyNeeds.fat}</p>
+              <p className="text-xs opacity-75">grams</p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              if (confirm('Reset all data?')) {
-                localStorage.clear();
-                setProfile({ gender: '', age: '', height: '', weight: '', activityLevel: 'moderate', goal: 'maintain' });
-                setDailyNeeds(null);
-                setSelectedItems([]);
-                setCurrentPage('home');
-              }
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all"
-          >
-            <Home size={20} />
-            <span className="hidden sm:inline">Back to Home</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto p-4">
-        {/* Your Daily Goals Card */}
-        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl shadow-xl p-6 text-white mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <Target size={28} />
-              Your Daily Nutrition Goals
-            </h2>
-            <span className="bg-white bg-opacity-20 px-4 py-2 rounded-full text-sm font-semibold">
-              {profile.goal === 'lose' ? '🔥 Weight Loss' : profile.goal === 'gain' ? '💪 Muscle Gain' : '⚖️ Maintain'}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {['calories', 'protein', 'carbs', 'fat', 'fiber'].map((n) => (
-              <div key={n} className="bg-white bg-opacity-20 rounded-xl p-4 text-center backdrop-blur">
-                <p className="text-sm opacity-90 capitalize">{n}</p>
-                <p className="text-3xl font-bold mt-1">{dailyNeeds[n]}</p>
-                <p className="text-xs opacity-75">{n === 'calories' ? 'kcal' : 'grams'}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left: Food Search & Add */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Search className="text-green-600" />
-                Search & Add Foods
-              </h3>
-              
-              <div className="flex gap-3 mb-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-                    placeholder="Search foods (e.g., dosa, rice, egg)..."
-                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
+        <div className="grid lg:grid-cols-3 gap-6 mb-6">
+          {/* Search Section */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Add Food</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 text-gray-400" size={20} />
                 <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(0.5, parseFloat(e.target.value) || 1))}
-                  min="0.5"
-                  step="0.5"
-                  placeholder="Qty"
-                  className="w-24 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search food..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
-
-              <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                {foodItems
-                  .filter((item) => item.toLowerCase().includes(searchTerm))
-                  .map((item) => (
-                    <div
-                      key={item}
-                      className="p-4 border-2 border-gray-100 rounded-xl hover:border-green-500 hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => addItem(item)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-semibold capitalize text-gray-800">{item}</p>
-                          <p className="text-sm text-gray-500">{nutritionDB[item].unit}</p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {nutritionDB[item].calories} cal • {nutritionDB[item].protein.toFixed(1)}g protein
-                          </p>
-                        </div>
-                        <Plus className="text-green-500" size={24} />
-                      </div>
-                    </div>
-                  ))}
-              </div>
             </div>
 
-            {/* AI Suggestions */}
-            {getAISuggestions.length > 0 && (
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-purple-900 flex items-center gap-2">
-                    <Sparkles className="text-purple-600" />
-                    AI Smart Suggestions
-                  </h3>
-                  <button
-                    onClick={() => setShowAISuggestions(!showAISuggestions)}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all flex items-center gap-2"
-                  >
-                    <Lightbulb size={18} />
-                    {showAISuggestions ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-                {showAISuggestions && (
-                  <div className="grid md:grid-cols-3 gap-3">
-                    {getAISuggestions.map((s, i) => (
-                      <div
-                        key={i}
-                        onClick={() => addItem(s.food)}
-                        className="bg-white p-4 rounded-xl border-2 border-purple-200 hover:border-purple-400 cursor-pointer transition-all"
-                      >
-                        <h4 className="font-bold capitalize text-lg text-gray-800">{s.food}</h4>
-                        <p className="text-sm text-gray-600">{s.data.unit}</p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {s.data.calories} cal • {s.data.protein.toFixed(1)}g protein
-                        </p>
-                        <div className="mt-3 bg-purple-50 px-3 py-1 rounded-full text-xs text-purple-700 font-semibold inline-block">
-                          Score: {s.score}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseFloat(e.target.value)))}
+                min="1"
+                step="0.5"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            {searchTerm && (
+              <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+                {filteredItems.length > 0 ? (
+                  filteredItems.map(item => (
+                    <div
+                      key={item}
+                      onClick={() => addItem(item)}
+                      className="p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-gray-800 capitalize">{item}</p>
+                          <p className="text-sm text-gray-500">
+                            {nutritionDB[item].calories} cal • {nutritionDB[item].unit}
+                          </p>
                         </div>
+                        <Plus className="text-green-500" size={20} />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="p-4 text-gray-500 text-center">No items found</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Right: Summary & What You Ate */}
-          <div>
-            {/* What You Consumed */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Calculator className="text-blue-600" />
-                  What You Ate
-                </span>
-                <span className="text-sm bg-blue-100 px-3 py-1 rounded-full">{selectedItems.length} items</span>
-              </h3>
-
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {selectedItems.length > 0 ? (
-                  selectedItems.map((item, i) => (
-                    <div key={i} className="p-3 bg-gray-50 rounded-xl flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-semibold capitalize text-gray-800">
+          {/* Consumed Items */}
+          <div className="bg-white rounded-lg shadow-lg p-6 lg:col-span-2">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">What You Ate ({selectedItems.length})</h2>
+            
+            <div className="max-h-96 overflow-y-auto">
+              {selectedItems.length > 0 ? (
+                selectedItems.map((item, index) => (
+                  <div key={index} className="mb-3 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-bold text-gray-800 capitalize">
                           {item.name} × {item.quantity}
-                        </p>
+                        </h3>
                         <p className="text-sm text-gray-600">{item.unit}</p>
-                        <p className="text-xs text-gray-500">
-                          {item.calories.toFixed(0)} cal • {item.protein.toFixed(1)}g protein
-                        </p>
                       </div>
                       <button
-                        onClick={() => setSelectedItems(selectedItems.filter((_, idx) => idx !== i))}
-                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all"
+                        onClick={() => removeItem(index)}
+                        className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded"
                       >
                         <Trash2 size={18} />
                       </button>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <p>No items added yet</p>
-                    <p className="text-sm">Start adding foods from the left!</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Total Consumed */}
-              {selectedItems.length > 0 && (
-                <div className="mt-4 pt-4 border-t-2">
-                  <h4 className="font-bold text-gray-700 mb-2">Total Consumed:</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="bg-green-50 p-2 rounded">
-                      <p className="text-gray-600">Calories</p>
-                      <p className="font-bold text-green-700">{consumed.calories.toFixed(0)} kcal</p>
-                    </div>
-                    <div className="bg-blue-50 p-2 rounded">
-                      <p className="text-gray-600">Protein</p>
-                      <p className="font-bold text-blue-700">{consumed.protein.toFixed(1)}g</p>
-                    </div>
-                    <div className="bg-orange-50 p-2 rounded">
-                      <p className="text-gray-600">Carbs</p>
-                      <p className="font-bold text-orange-700">{consumed.carbs.toFixed(1)}g</p>
-                    </div>
-                    <div className="bg-red-50 p-2 rounded">
-                      <p className="text-gray-600">Fat</p>
-                      <p className="font-bold text-red-700">{consumed.fat.toFixed(1)}g</p>
+                    
+                    <div className="grid grid-cols-4 gap-2 text-sm">
+                      <div className="bg-white p-2 rounded text-center">
+                        <p className="text-gray-500 text-xs">Cal</p>
+                        <p className="font-bold text-green-600">{item.calories.toFixed(0)}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded text-center">
+                        <p className="text-gray-500 text-xs">Protein</p>
+                        <p className="font-bold text-blue-600">{item.protein.toFixed(1)}g</p>
+                      </div>
+                      <div className="bg-white p-2 rounded text-center">
+                        <p className="text-gray-500 text-xs">Carbs</p>
+                        <p className="font-bold text-orange-600">{item.carbs.toFixed(1)}g</p>
+                      </div>
+                      <div className="bg-white p-2 rounded text-center">
+                        <p className="text-gray-500 text-xs">Fat</p>
+                        <p className="font-bold text-red-600">{item.fat.toFixed(1)}g</p>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p className="text-lg">No food added yet</p>
+                  <p className="text-sm">Start adding your meals</p>
                 </div>
               )}
             </div>
-
-            {/* What's Remaining */}
-            {remaining && (
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl shadow-lg p-6 text-white">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Target size={24} />
-                  What You Still Need
-                </h3>
-                <div className="space-y-3">
-                  {['calories', 'protein', 'carbs', 'fat', 'fiber'].map((n) => {
-                    const val = remaining[n];
-                    const percent = Math.min(100, Math.round((consumed[n] / dailyNeeds[n]) * 100));
-                    return (
-                      <div key={n} className="bg-white bg-opacity-20 rounded-xl p-3 backdrop-blur">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="capitalize font-semibold">{n}</span>
-                          <span className="text-sm">{percent}%</span>
-                        </div>
-                        <div className="bg-white bg-opacity-30 rounded-full h-2 mb-2">
-                          <div
-                            className="bg-white h-2 rounded-full transition-all"
-                            style={{ width: `${percent}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-lg font-bold">
-                          {val >= 0 ? (
-                            <>
-                              {val.toFixed(n === 'calories' ? 0 : 1)}{' '}
-                              {n === 'calories' ? 'kcal' : 'g'} left
-                            </>
-                          ) : (
-                            <span className="text-yellow-300">
-                              +{Math.abs(val).toFixed(n === 'calories' ? 0 : 1)}{' '}
-                              {n === 'calories' ? 'kcal' : 'g'} over!
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Summary Message */}
-                <div className="mt-6 p-4 bg-white text-gray-800 rounded-xl text-center">
-                  <p className="font-bold text-lg flex items-center justify-center gap-2">
-                    <Sparkles className="text-yellow-500" />
-                    {remaining.calories > 200
-                      ? `You need ${remaining.calories.toFixed(0)} more calories today!`
-                      : remaining.calories > 0
-                      ? `Almost there! Just ${remaining.calories.toFixed(0)} calories to go!`
-                      : `Goal achieved! 🎉`}
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Remaining Nutrition */}
+        {remaining && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center mb-6">
+              <Calculator className="mr-3 text-red-600" size={32} />
+              <h2 className="text-3xl font-bold text-gray-800">What You Still Need Today</h2>
+            </div>
+            
+            {/* Macros Remaining */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Macronutrients</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-gradient-to-br from-green-100 to-green-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-1">Calories</p>
+                  <p className={`text-2xl font-bold ${remaining.calories >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                    {remaining.calories >= 0 ? remaining.calories.toFixed(0) : `+${Math.abs(remaining.calories).toFixed(0)}`}
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-600 h-2 rounded-full transition-all"
+                      style={{width: `${getPercentage(consumed.calories, dailyNeeds.calories)}%`}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{getPercentage(consumed.calories, dailyNeeds.calories)}% done</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-1">Protein</p>
+                  <p className={`text-2xl font-bold ${remaining.protein >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
+                    {remaining.protein >= 0 ? remaining.protein.toFixed(1) : `+${Math.abs(remaining.protein).toFixed(1)}`}g
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all"
+                      style={{width: `${getPercentage(consumed.protein, dailyNeeds.protein)}%`}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{getPercentage(consumed.protein, dailyNeeds.protein)}% done</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-1">Carbs</p>
+                  <p className={`text-2xl font-bold ${remaining.carbs >= 0 ? 'text-orange-700' : 'text-red-700'}`}>
+                    {remaining.carbs >= 0 ? remaining.carbs.toFixed(1) : `+${Math.abs(remaining.carbs).toFixed(1)}`}g
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-orange-600 h-2 rounded-full transition-all"
+                      style={{width: `${getPercentage(consumed.carbs, dailyNeeds.carbs)}%`}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{getPercentage(consumed.carbs, dailyNeeds.carbs)}% done</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-red-100 to-red-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-1">Fat</p>
+                  <p className={`text-2xl font-bold ${remaining.fat >= 0 ? 'text-red-700' : 'text-red-700'}`}>
+                    {remaining.fat >= 0 ? remaining.fat.toFixed(1) : `+${Math.abs(remaining.fat).toFixed(1)}`}g
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-red-600 h-2 rounded-full transition-all"
+                      style={{width: `${getPercentage(consumed.fat, dailyNeeds.fat)}%`}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{getPercentage(consumed.fat, dailyNeeds.fat)}% done</p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-1">Fiber</p>
+                  <p className={`text-2xl font-bold ${remaining.fiber >= 0 ? 'text-purple-700' : 'text-red-700'}`}>
+                    {remaining.fiber >= 0 ? remaining.fiber.toFixed(1) : `+${Math.abs(remaining.fiber).toFixed(1)}`}g
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-600 h-2 rounded-full transition-all"
+                      style={{width: `${getPercentage(consumed.fiber, dailyNeeds.fiber)}%`}}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{getPercentage(consumed.fiber, dailyNeeds.fiber)}% done</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minerals Remaining */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Minerals Remaining</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Calcium</p>
+                  <p className={`text-xl font-bold ${remaining.calcium >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    {remaining.calcium >= 0 ? remaining.calcium.toFixed(0) : `+${Math.abs(remaining.calcium).toFixed(0)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Iron</p>
+                  <p className={`text-xl font-bold ${remaining.iron >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    {remaining.iron >= 0 ? remaining.iron.toFixed(1) : `+${Math.abs(remaining.iron).toFixed(1)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Magnesium</p>
+                  <p className={`text-xl font-bold ${remaining.magnesium >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    {remaining.magnesium >= 0 ? remaining.magnesium.toFixed(0) : `+${Math.abs(remaining.magnesium).toFixed(0)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Potassium</p>
+                  <p className={`text-xl font-bold ${remaining.potassium >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    {remaining.potassium >= 0 ? remaining.potassium.toFixed(0) : `+${Math.abs(remaining.potassium).toFixed(0)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Sodium</p>
+                  <p className={`text-xl font-bold ${remaining.sodium >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    {remaining.sodium >= 0 ? remaining.sodium.toFixed(0) : `+${Math.abs(remaining.sodium).toFixed(0)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Vitamins Remaining */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-3">Vitamins Remaining</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Vitamin A</p>
+                  <p className={`text-xl font-bold ${remaining.vitaminA >= 0 ? 'text-yellow-700' : 'text-red-600'}`}>
+                    {remaining.vitaminA >= 0 ? remaining.vitaminA.toFixed(0) : `+${Math.abs(remaining.vitaminA).toFixed(0)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">IU</p>
+                </div>
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Vitamin C</p>
+                  <p className={`text-xl font-bold ${remaining.vitaminC >= 0 ? 'text-orange-700' : 'text-red-600'}`}>
+                    {remaining.vitaminC >= 0 ? remaining.vitaminC.toFixed(1) : `+${Math.abs(remaining.vitaminC).toFixed(1)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Vitamin B6</p>
+                  <p className={`text-xl font-bold ${remaining.vitaminB6 >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                    {remaining.vitaminB6 >= 0 ? remaining.vitaminB6.toFixed(2) : `+${Math.abs(remaining.vitaminB6).toFixed(2)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">mg</p>
+                </div>
+                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Vitamin B12</p>
+                  <p className={`text-xl font-bold ${remaining.vitaminB12 >= 0 ? 'text-red-700' : 'text-red-600'}`}>
+                    {remaining.vitaminB12 >= 0 ? remaining.vitaminB12.toFixed(1) : `+${Math.abs(remaining.vitaminB12).toFixed(1)}`}
+                  </p>
+                  <p className="text-xs text-gray-500">µg</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Summary Message */}
+            <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+              <p className="text-blue-800 font-semibold text-center">
+                {remaining.calories > 0 
+                  ? `🍽️ You still need ${remaining.calories.toFixed(0)} calories today to meet your goal!`
+                  : `✅ Goal achieved! You've consumed ${Math.abs(remaining.calories).toFixed(0)} calories over your target.`
+                }
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
 
-export default App;
+export default NutritionAnalyzer;
