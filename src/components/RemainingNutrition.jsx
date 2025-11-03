@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Calculator } from 'lucide-react';
 
-const RemainingNutrition = ({ remaining, consumed, dailyNeeds, getPercentage }) => {
+const RemainingNutrition = ({ remaining, dailyNeeds, getPercentage }) => {
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
