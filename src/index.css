@@ -1,5 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
-body { @apply antialiased; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background-image: url('/images/background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
